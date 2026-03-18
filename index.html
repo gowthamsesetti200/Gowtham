@@ -28,7 +28,7 @@
 
   body {
     min-height: 100vh;
-    background: var(--warm-white);
+    background: #8b1a4a;
     font-family: 'Nunito', sans-serif;
     display: flex;
     align-items: center;
@@ -43,9 +43,9 @@
     position: fixed;
     inset: 0;
     background:
-      radial-gradient(ellipse at 15% 20%, #fde8e8 0%, transparent 50%),
-      radial-gradient(ellipse at 85% 75%, #e8e0f5 0%, transparent 50%),
-      radial-gradient(ellipse at 50% 50%, #fde2cc22 0%, transparent 70%);
+      radial-gradient(ellipse at 15% 20%, rgba(244,167,185,0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 85% 75%, rgba(232,224,245,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(253,226,204,0.08) 0%, transparent 70%);
     z-index: 0;
   }
 
@@ -204,42 +204,70 @@
     z-index: 999;
   }
 
-  /* Celebration page */
-  .celebration {
+  /* Celebration page - full screen pink takeover */
+  .celebration-fullscreen {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(160deg, #e8357a 0%, #f0508a 40%, #e02070 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
     text-align: center;
-    animation: fadeSlideIn 0.6s ease both;
+    padding: 40px 24px;
+    animation: celebIn 0.5s ease both;
+    overflow: hidden;
   }
-  .confetti-emoji {
-    font-size: 3.5rem;
+  @keyframes celebIn {
+    from { opacity: 0; transform: scale(1.04); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  /* floating hearts on celebration screen */
+  .celeb-heart {
+    position: absolute;
+    pointer-events: none;
+    animation: celebHeartFloat linear infinite;
+    font-size: 1.6rem;
+    opacity: 0.85;
+  }
+  @keyframes celebHeartFloat {
+    0%   { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+    10%  { opacity: 0.9; }
+    90%  { opacity: 0.7; }
+    100% { transform: translateY(-12vh) rotate(30deg); opacity: 0; }
+  }
+
+  .yay-icon {
+    font-size: 4rem;
+    margin-bottom: 18px;
+    animation: bounceIn 0.7s cubic-bezier(.34,1.56,.64,1) both 0.2s;
     display: block;
-    margin-bottom: 16px;
-    animation: spin 2s ease-in-out infinite alternate;
   }
-  @keyframes spin {
-    from { transform: rotate(-10deg) scale(1); }
-    to   { transform: rotate(10deg) scale(1.1); }
-  }
-  .celebrate-title {
+  .yay-title {
     font-family: 'Playfair Display', serif;
-    font-size: 2rem;
-    color: var(--text-dark);
+    font-size: 2.6rem;
     font-weight: 700;
-    margin-bottom: 12px;
+    color: #ffffff;
+    margin-bottom: 22px;
+    line-height: 1.25;
+    text-shadow: 0 2px 16px rgba(120,0,60,0.25);
+    animation: fadeSlideIn 0.6s ease both 0.3s;
   }
-  .celebrate-msg {
-    color: var(--text-mid);
-    font-size: 1rem;
-    line-height: 1.7;
-    margin-bottom: 28px;
+  .celeb-sub {
+    font-size: 1.15rem;
+    color: rgba(255,255,255,0.92);
+    font-weight: 600;
+    margin-bottom: 10px;
+    animation: fadeSlideIn 0.6s ease both 0.45s;
+    text-shadow: 0 1px 8px rgba(120,0,60,0.2);
   }
-  .celebrate-hearts {
-    font-size: 1.8rem;
-    letter-spacing: 6px;
-    animation: pulse 1.5s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.15); }
+  .celeb-hug {
+    font-size: 1.05rem;
+    color: rgba(255,255,255,0.85);
+    font-weight: 500;
+    animation: fadeSlideIn 0.6s ease both 0.6s;
   }
 
   /* Burst confetti on celebration */
@@ -320,7 +348,7 @@ const questions = [
   {
     icon: "💌",
     ribbon: "Question 3 of 3",
-    text: "Will you accept this little surprise I made for you?",
+    text: "Will you be my Valentine? 💕",
     sub: "The YES button is your only real option here 😇",
     noEffect: "run"   // run away behaviour
   }
@@ -370,11 +398,9 @@ function render() {
   content.innerHTML = `
     <div class="card-inner">
       <div class="steps">${dots}</div>
-      <span class="q-icon">${q.icon}</span>
-
       <div class="question">${q.text}</div>
-      <div class="sub-text">${q.sub}</div>
-      <div class="btn-row" id="btnRow" style="min-height:56px;">
+
+      <div class="btn-row" id="btnRow" style="min-height:56px; margin-top:32px;">
         <button class="btn btn-yes" id="btnYes" onclick="handleYes()">Yes ✓</button>
         <button class="btn btn-no" id="btnNo" onclick="handleNo()">No ✗</button>
       </div>
@@ -405,29 +431,13 @@ function handleYes() {
 function handleNo() {
   const isLastQ = currentQ === 2;
   if (!isLastQ) {
-    // Q1 & Q2: clicking No also advances
     currentQ++;
     reRender();
     return;
   }
 
-  // Q3 logic
-  noClickCount++;
-  const warnText = document.getElementById('warnText');
-
-  if (noClickCount < MAX_NO_RUNS) {
-    const remaining = MAX_NO_RUNS - noClickCount;
-    warnText.textContent = ``;
-    runAwayNo();
-  } else {
-    // 4th time: remove No button entirely
-    const btnNo = document.getElementById('btnNo');
-    if (btnNo) btnNo.remove();
-    // If fixed no exists
-    if (noButtonFixed) { noButtonFixed.remove(); noButtonFixed = null; }
-    warnText.textContent = "";
-    shakeCard();
-  }
+  // Q3: No just runs away forever
+  runAwayNo();
 }
 
 function runAwayNo() {
@@ -473,24 +483,36 @@ function reRender() {
 
 // ─── CELEBRATION ─────────────────────────────────────────────────
 function showCelebration() {
-  // Remove any floating no button
   if (noButtonFixed) { noButtonFixed.remove(); noButtonFixed = null; }
 
-  const content = document.getElementById('content');
-  content.innerHTML = `
-    <div class="celebration">
-      <span class="confetti-emoji">🎉</span>
-      <div class="ribbon">Yay! It worked! 🎀</div>
-      <div class="celebrate-title">You said yes! 🥹</div>
-      <p class="celebrate-msg">
-        Hey friend,<br>
-        Just a little reminder that you are absolutely amazing,<br>
-        irreplaceable, and so so loved. Thank you for being YOU.<br>
-        Having you in my life is my greatest blessing 💖
-      </p>
-      <div class="celebrate-hearts">💗 💕 💗 💕 💗</div>
-    </div>
+  // Hide the card, take over full screen
+  document.getElementById('mainCard').style.display = 'none';
+
+  const celebDiv = document.createElement('div');
+  celebDiv.className = 'celebration-fullscreen';
+  celebDiv.id = 'celebScreen';
+
+  // Floating hearts
+  const heartEmojis = ['❤️','💕','💗','💖','💝','💓','🩷','💞'];
+  for (let i = 0; i < 22; i++) {
+    const h = document.createElement('div');
+    h.className = 'celeb-heart';
+    h.textContent = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+    h.style.left = Math.random() * 100 + 'vw';
+    h.style.fontSize = (1.2 + Math.random() * 1.8) + 'rem';
+    h.style.animationDuration = (8 + Math.random() * 12) + 's';
+    h.style.animationDelay = (-Math.random() * 14) + 's';
+    celebDiv.appendChild(h);
+  }
+
+  celebDiv.innerHTML += `
+    <span class="yay-icon">😘</span>
+    <div class="yay-title">Yay!! I knew you'd<br>say yes 💖</div>
+    <div class="celeb-sub">You just made me the happiest person ever! 🥰</div>
+    <div class="celeb-hug">Now come here and give me a hug 🤗<br><br>❤️</div>
   `;
+
+  document.body.appendChild(celebDiv);
   launchConfetti();
 }
 
