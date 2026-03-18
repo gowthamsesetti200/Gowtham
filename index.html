@@ -358,6 +358,7 @@ let currentQ = 0;
 let noClickCount = 0;
 const MAX_NO_RUNS = 4;
 let noButtonFixed = null;
+const noLabels = ["No 💔", "Nice Try ", "Can't touch this! ", "Not happening!", "You Wish ", "Never! ", "haha ", "Try again"];
 
 // ─── FLOATING HEARTS ─────────────────────────────────────────────
 const bg = document.getElementById('heartsBg');
@@ -442,8 +443,12 @@ function handleNo() {
 
 function runAwayNo() {
   shakeCard();
+  noClickCount++;
   const btnNo = document.getElementById('btnNo');
   if (!btnNo) return;
+
+  // Cycle label: "No ✗" → "Nice Try 😏" → "Next Time 😅" → repeat
+  btnNo.textContent = noLabels[noClickCount % noLabels.length];
 
   // Teleport to a random spot on screen
   const margin = 80;
